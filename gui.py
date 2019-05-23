@@ -1,6 +1,9 @@
 #파이참 커밋
 from tkinter import *
 from tkinter import font
+from tkinter import ttk
+
+
 
 Tk = Tk()
 Tk.geometry('800x500+750+200')
@@ -13,14 +16,23 @@ def IninTopText():
     MainText.place(x=20)
 
 def InitInputSi():
-    global InputLabel
+
+    #global InputLabel
+
     TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
     SiLabel = Label(Tk, font=TempFont, text="시 / 도")
     SiLabel.pack()
     SiLabel.place(x=50, y=70)
-    InputLabel = Entry(Tk, font=TempFont, width=10, borderwidth=10, relief='ridge')
-    InputLabel.pack()
-    InputLabel.place(x=20, y=100)
+    #InputLabel = Entry(Tk, font=TempFont, width=10, borderwidth=10, relief='ridge')
+    #InputLabel.pack()
+    #InputLabel.place(x=20, y=100)
+
+    Combobox1 = ttk.Combobox(font=TempFont, textvariable=str, width=10)
+    Combobox1['value'] = ("서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도", "충청북도", "충청남도",
+                          "전라북도", "전라남도", "경상북도", "경상남도", "제주특별자치도")    #종류
+    Combobox1.current(0)    #시작지점
+    Combobox1.pack()
+    Combobox1.place(x=20, y=110)
 
 def InitInputGu():
     global InputLabel
