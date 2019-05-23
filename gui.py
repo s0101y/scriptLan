@@ -73,8 +73,8 @@ def InitSearchDisasterMsgButton():
 
 def SearchLibrary():
     import http.client
-    from xml.dom.minidom import parse, parseString
     import urllib
+    from xml.etree import ElementTree
 
     server = "api.data.go.kr"
     conn = http.client.HTTPConnection(server)
@@ -84,44 +84,29 @@ def SearchLibrary():
     # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
     req = conn.getresponse()
     global DataList
+    global itemElements, ShelterName, ShelterAdr
+
     DataList.clear()
 
     print(req.status, req.reason)
 
     if req.status == 200:
         DataList = req.read().decode('utf-8')
-        if DataList == None:
-            print("에러")
-        else:
-            parseData = parseString(DataList)
-            GeoInfoLibrary = parseData.childNodes
-            row = GeoInfoLibrary[0].childNodes
+        tree = ElementTree.fromstring(DataList)
+        print(DataList)
+        itemElements = tree.getiterator("item")
 
-            for item in row:
-                if item.nodeName == "row":
-                    subitems = item.childNodes
+        for item in itemElements:
+            ShelterName = item.find("clnsShuntFcltyNm")
+            ShelterAdr = item.find("rdnmadr")
+            print(ShelterAdr)
+            if len(ShelterName.text) > 0:
+                return {"시설명": ShelterName.text, "주소": ShelterAdr.text}
 
-                    if subitems[3].firstChild.nodeValue == Combobox1.get():
-                        pass
-                    elif subitems[5].firstChild.nodeValue == Combobox1.get():
-                        pass
-                    else:
-                        continue
-                    if subitems[29].firstChild is not None:
-                        tel = str(subitems[29].firstChild.nodeValue)
-                        pass
-                        if tel[0] is not '0':
-                            tel = "02-" + tel
-                            pass
-                        DataList.append((subitems[15].firstChild.nodeValue, subitems[13].firstChild.nodeValue, tel))
-                    else:
-                        DataList.append((subitems[15].firstChild.nodeValue, subitems[13].firstChild.nodeValue, "-"))
-
-
-
-                RenderText.insert(INSERT, DataList[0])
-                RenderText.insert(INSERT, "\t")
-                RenderText.insert(INSERT, DataList[1])
+    for i in range(len(DataList)):
+        RenderText.insert(INSERT, DataList[i][0])
+        RenderText.insert(INSERT, "\t")
+        RenderText.insert(INSERT, DataList[i][1])
 
 
 def SearchDangerPButtonAction():
@@ -133,6 +118,7 @@ def SearchDisasterMsgButtonAction():
 def InitRenderText():
     global RenderText
     TempFont = font.Font(Tk, size=10, family='Malgun Gothic')
+
     RenderTextScrollbar = Scrollbar(Tk)
     RenderTextScrollbar.pack()
     RenderTextScrollbar.place(x=375, y=245)
