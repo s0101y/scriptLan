@@ -74,6 +74,7 @@ def InitSearchDisasterMsgButton():
 def SearchLibrary():
     import http.client
     import urllib
+    from xml.etree import ElementTree
 
     server = "api.data.go.kr"
     conn = http.client.HTTPConnection(server)
@@ -83,21 +84,29 @@ def SearchLibrary():
     # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
     req = conn.getresponse()
     global DataList
+    global itemElements, ShelterName, ShelterAdr
+
     DataList.clear()
 
     print(req.status, req.reason)
 
     if req.status == 200:
         DataList = req.read().decode('utf-8')
-        from xml.etree import ElementTree
         tree = ElementTree.fromstring(DataList)
+        print(DataList)
         itemElements = tree.getiterator("item")
 
         for item in itemElements:
             ShelterName = item.find("clnsShuntFcltyNm")
             ShelterAdr = item.find("rdnmadr")
+            print(ShelterAdr)
             if len(ShelterName.text) > 0:
-                return [ShelterName.text, ShelterAdr.text]  # 사전형식 반환
+                return {"시설명": ShelterName.text, "주소": ShelterAdr.text}
+
+    for i in range(len(DataList)):
+        RenderText.insert(INSERT, DataList[i][0])
+        RenderText.insert(INSERT, "\t")
+        RenderText.insert(INSERT, DataList[i][1])
 
 
 def SearchDangerPButtonAction():
