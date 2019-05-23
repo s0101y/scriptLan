@@ -1,6 +1,7 @@
 import http.client
 import urllib
 from xml.etree import ElementTree
+
 server = "api.data.go.kr"
 conn = http.client.HTTPConnection(server)
 hangul_utf8 = urllib.parse.quote("부산광역시 북구")
@@ -13,14 +14,14 @@ if int(req.status) == 200:
 else:
     print("failed!")
 
-
+TEXT = []
 tree = ElementTree.fromstring(strXml)
 itemElements = tree.getiterator("item")    # item 엘리먼트 리스트 추출
-print(itemElements)
 
 for item in itemElements:
     name = item.find("clnsShuntFcltyNm")          #clnsShuntFcltyNm 검색
     adr = item.find("rdnmadr")                      #rdnmadr 검색
-    print(adr)
     if len(adr.text) > 0 :
-        print({"name":name.text,"adr":adr.text})
+        TEXT.append((name.text, adr.text))
+
+print(TEXT)

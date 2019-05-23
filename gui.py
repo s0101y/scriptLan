@@ -46,9 +46,17 @@ def InitInputGu():
 
 def InitSearchButton():
     TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchLibrary)
+    SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchButtonAction)
     SearchButton.pack()
     SearchButton.place(x=330, y=110)
+
+def SearchButtonAction():
+
+    RenderText.configure(state='normal')
+    RenderText.delete(0.0, END)
+    SearchLibrary()
+    RenderText.configure(state='disabled')
+
 
 def InitSearchDangerPButton():
     TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
@@ -75,7 +83,8 @@ def SearchLibrary():
     import http.client
     import urllib
     from xml.etree import ElementTree
-
+    global TEXT
+    TEXT = []
     server = "api.data.go.kr"
     conn = http.client.HTTPConnection(server)
     hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
@@ -83,30 +92,29 @@ def SearchLibrary():
                  "/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
     # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
     req = conn.getresponse()
-    global DataList
-    global itemElements, ShelterName, ShelterAdr
+    print(req.status)
+    if int(req.status) == 200:
+        strXml = req.read()
+    else:
+        print("failed!")
 
-    DataList.clear()
+    tree = ElementTree.fromstring(strXml)
+    itemElements = tree.getiterator("item")  # item 엘리먼트 리스트 추출
 
-    print(req.status, req.reason)
+    for item in itemElements:
+        name = item.find("clnsShuntFcltyNm")  # clnsShuntFcltyNm 검색
+        adr = item.find("rdnmadr")  # rdnmadr 검색
+        if len(adr.text) > 0:
+            TEXT.append((name.text, adr.text))
 
-    if req.status == 200:
-        DataList = req.read().decode('utf-8')
-        tree = ElementTree.fromstring(DataList)
-        print(DataList)
-        itemElements = tree.getiterator("item")
-
-        for item in itemElements:
-            ShelterName = item.find("clnsShuntFcltyNm")
-            ShelterAdr = item.find("rdnmadr")
-            print(ShelterAdr)
-            if len(ShelterName.text) > 0:
-                return {"시설명": ShelterName.text, "주소": ShelterAdr.text}
-
-    for i in range(len(DataList)):
-        RenderText.insert(INSERT, DataList[i][0])
-        RenderText.insert(INSERT, "\t")
-        RenderText.insert(INSERT, DataList[i][1])
+    for i in range(len(TEXT)):
+        RenderText.insert(INSERT, "[")
+        RenderText.insert(INSERT, i + 1)
+        RenderText.insert(INSERT, "] ")
+        RenderText.insert(INSERT, TEXT[i][0])
+        RenderText.insert(INSERT, " | ")
+        RenderText.insert(INSERT, TEXT[i][1])
+        RenderText.insert(INSERT, "\n\n")
 
 
 def SearchDangerPButtonAction():
