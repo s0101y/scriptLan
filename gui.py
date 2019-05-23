@@ -103,7 +103,7 @@ def SearchLibrary():
 
     for item in itemElements:
         name = item.find("clnsShuntFcltyNm")  # clnsShuntFcltyNm 검색
-        adr = item.find("rdnmadr")  # rdnmadr 검색
+        adr = item.find("rdnmadr")              # rdnmadr 검색
         if len(adr.text) > 0:
             TEXT.append((name.text, adr.text))
 
