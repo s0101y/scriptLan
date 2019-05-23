@@ -91,18 +91,12 @@ def ButtonClick():
 
    # DataList.clear()
 
-    print(req.status, req.reason)
-
     if req.status == 200:
 
         data = req.read().decode('utf-8')
         from xml.etree import ElementTree
         RenderText.insert(INSERT, data)
         tree = ElementTree.fromstring(data)
-        print(data)
-
-
-
         itemElements = tree.getiterator("item")
 
         for item in itemElements:
