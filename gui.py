@@ -17,7 +17,7 @@ def IninTopText():
 
 def InitInputSi():
 
-    #global InputLabel
+    global Combobox1
 
     TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
     SiLabel = Label(Tk, font=TempFont, text="시 / 도")
@@ -46,7 +46,7 @@ def InitInputGu():
 
 def InitSearchButton():
     TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchButtonAction)
+    SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchLibrary)
     SearchButton.pack()
     SearchButton.place(x=330, y=110)
 
@@ -70,17 +70,35 @@ def InitSearchDisasterMsgButton():
     Label2.pack()
     Label2.place(x=235, y=235)
 
-def SearchButtonAction():
-    global SearchListBox
-
-    RenderText.configure(state='normal')
-    RenderText.delete(0.0, END)
-    iSearchIndex = SearchListBox.curselection()[0]
-    if iSearchIndex == 0:
-        SearchLibrary()
 
 def SearchLibrary():
     import http.client
+    import urllib
+
+    server = "api.data.go.kr"
+    conn = http.client.HTTPConnection(server)
+    hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
+    conn.request("GET",
+                 "/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
+    # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
+    req = conn.getresponse()
+    global DataList
+    DataList.clear()
+
+    print(req.status, req.reason)
+
+    if req.status == 200:
+        DataList = req.read().decode('utf-8')
+        from xml.etree import ElementTree
+        tree = ElementTree.fromstring(DataList)
+        itemElements = tree.getiterator("item")
+
+        for item in itemElements:
+            ShelterName = item.find("clnsShuntFcltyNm")
+            ShelterAdr = item.find("rdnmadr")
+            if len(ShelterName.text) > 0:
+                return [ShelterName.text, ShelterAdr.text]  # 사전형식 반환
+
 
 def SearchDangerPButtonAction():
     pass
