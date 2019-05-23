@@ -2,8 +2,7 @@
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
-
-
+from tkinter.tix import ComboBox
 
 Tk = Tk()
 Tk.geometry('800x500+750+200')
@@ -34,19 +33,21 @@ def InitInputSi():
     Combobox1.pack()
     Combobox1.place(x=20, y=110)
 
+
+
 def InitInputGu():
-    global InputLabel
+    global InputGu
     TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
     GuLabel = Label(Tk, font=TempFont, text="구")
     GuLabel.pack()
     GuLabel.place(x=230, y=70)
-    InputLabel = Entry(Tk, font=TempFont, width=10, borderwidth=10, relief='ridge')
-    InputLabel.pack()
-    InputLabel.place(x=180, y=100)
+    InputGu = Entry(Tk, font=TempFont, width=10, borderwidth=10, relief='ridge')
+    InputGu.pack()
+    InputGu.place(x=180, y=100)
 
 def InitSearchButton():
     TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchLibrary)
+    SearchButton = Button(Tk, font=TempFont, text='검 색', command=ButtonClick)
     SearchButton.pack()
     SearchButton.place(x=330, y=110)
 
@@ -70,59 +71,45 @@ def InitSearchDisasterMsgButton():
     Label2.pack()
     Label2.place(x=235, y=235)
 
-
-def SearchLibrary():
+def ButtonClick():
     import http.client
-    from xml.dom.minidom import parse, parseString
     import urllib
+    global DataList
+    global data
+
 
     server = "api.data.go.kr"
     conn = http.client.HTTPConnection(server)
-    hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
+    DataList = Combobox1.get() + " " + InputGu.get()
+    hangul_utf8 = urllib.parse.quote(DataList)
+
+    print(DataList)
     conn.request("GET",
                  "/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
     # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
     req = conn.getresponse()
-    global DataList
-    DataList.clear()
+
+   # DataList.clear()
 
     print(req.status, req.reason)
 
     if req.status == 200:
-        DataList = req.read().decode('utf-8')
-        if DataList == None:
-            print("에러")
-        else:
-            parseData = parseString(DataList)
-            GeoInfoLibrary = parseData.childNodes
-            row = GeoInfoLibrary[0].childNodes
 
-            for item in row:
-                if item.nodeName == "row":
-                    subitems = item.childNodes
-
-                    if subitems[3].firstChild.nodeValue == Combobox1.get():
-                        pass
-                    elif subitems[5].firstChild.nodeValue == Combobox1.get():
-                        pass
-                    else:
-                        continue
-                    if subitems[29].firstChild is not None:
-                        tel = str(subitems[29].firstChild.nodeValue)
-                        pass
-                        if tel[0] is not '0':
-                            tel = "02-" + tel
-                            pass
-                        DataList.append((subitems[15].firstChild.nodeValue, subitems[13].firstChild.nodeValue, tel))
-                    else:
-                        DataList.append((subitems[15].firstChild.nodeValue, subitems[13].firstChild.nodeValue, "-"))
+        data = req.read().decode('utf-8')
+        from xml.etree import ElementTree
+        RenderText.insert(INSERT, data)
+        tree = ElementTree.fromstring(data)
+        print(data)
 
 
 
-                RenderText.insert(INSERT, DataList[0])
-                RenderText.insert(INSERT, "\t")
-                RenderText.insert(INSERT, DataList[1])
+        itemElements = tree.getiterator("item")
 
+        for item in itemElements:
+            ShelterName = item.find("clnsShuntFcltyNm")
+            ShelterAdr = item.find("rdnmadr")
+            if len(ShelterName.text) > 0:
+                return [ShelterName.text, ShelterAdr.text]  # 사전형식 반환
 
 def SearchDangerPButtonAction():
     pass
@@ -132,16 +119,20 @@ def SearchDisasterMsgButtonAction():
 
 def InitRenderText():
     global RenderText
+
     TempFont = font.Font(Tk, size=10, family='Malgun Gothic')
+
     RenderTextScrollbar = Scrollbar(Tk)
     RenderTextScrollbar.pack()
     RenderTextScrollbar.place(x=375, y=245)
-    RenderText = Text(Tk, width=55, height=17, borderwidth=5, relief='ridge', yscrollcommand=RenderTextScrollbar.set)
+    RenderText = Text(Tk, width=100, height=17, borderwidth=5, relief='ridge', yscrollcommand=RenderTextScrollbar.set)
     RenderText.pack()
     RenderText.place(x=10, y=260)
     RenderTextScrollbar.config(command=RenderText.yview)
     RenderTextScrollbar.pack(side=RIGHT, fill=BOTH)
-    RenderText.configure(state='disabled')
+   # RenderText.configure(state='disabled')
+   # RenderText.insert(INSERT,data)
+
 
 IninTopText()
 InitInputSi()
