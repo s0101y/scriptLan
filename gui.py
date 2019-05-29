@@ -1,6 +1,12 @@
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
+import smtplib
+from email.mime.text import MIMEText
+import http.client
+import urllib
+from xml.etree import ElementTree
+
 
 Tk = Tk()
 Tk.title("지진 대피소 검색")
@@ -59,9 +65,20 @@ def InitSearchDangerPButton():
 
 def InitSearchDisasterMsgButton():
     TempFont = font.Font(Tk, size=11, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='현재 장소의 재난알림 검색', command=SearchDisasterMsgButtonAction)
+    SearchButton = Button(Tk, font=TempFont, text='재난알림 보내기', command=MailSubmit)
     SearchButton.pack()
-    SearchButton.place(x=110, y=200)
+    SearchButton.place(x=300, y=200)
+
+    global InputEmail
+    InputEmail = Entry(Tk, font=TempFont, width=20, borderwidth=7, relief='ridge')
+    InputEmail.pack()
+    InputEmail.place(x=80, y=200)
+
+    EmailLabel = Label(Tk, font=TempFont, text="이메일")
+    EmailLabel.pack()
+    EmailLabel.place(x=20, y=205)
+
+
 
     Label1 = Label(Tk, font=TempFont, text="시설명")
     Label1.pack()
@@ -73,9 +90,7 @@ def InitSearchDisasterMsgButton():
 
 
 def SearchLibrary():
-    import http.client
-    import urllib
-    from xml.etree import ElementTree
+
     global TEXT
     TEXT = []
     server = "api.data.go.kr"
@@ -110,10 +125,41 @@ def SearchLibrary():
         RenderText.insert(INSERT, "\n\n")
 
 
-def SearchDangerPButtonAction():
-    pass
 
-def SearchDisasterMsgButtonAction():
+def MailSubmit():
+    conn = http.client.HTTPConnection("apis.data.go.kr")
+    conn.request("GET",
+                 "/1741000/DisasterMsg2/getDisasterMsgList?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=10&type=xml&flag=Y")
+    req = conn.getresponse()
+    print(req.status, req.reason)
+    #print(req.read().decode('utf-8'))
+    strXml = req.read().decode('utf-8')
+    tree = ElementTree.fromstring(strXml)
+    itemElements = tree.getiterator("msg")  # msg 엘리먼트 리스트 추출
+
+
+    text = ""
+    for data in itemElements:
+        text += (data.text+"\n")
+
+    # 세션 생성
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    # TLS 보안 시작
+    s.starttls()
+    # 로그인 인증
+    s.login('sakha1004@gmail.com', 'ereegbpmapsrihsz')
+    # 보낼 메시지 설정
+    msg = MIMEText(text)
+    msg['Subject'] = '제목 : 재난알림.'
+
+    # 메일 보내기
+    s.sendmail("sakha1004@gmail.com",InputEmail.get() , msg.as_string())
+
+    # 세션 종료
+    s.quit()
+
+
+def SearchDangerPButtonAction():
     pass
 
 def InitRenderText():
