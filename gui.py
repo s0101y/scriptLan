@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 import http.client
 import urllib
 from xml.etree import ElementTree
+import folium
 
 
 Tk = Tk()
@@ -15,7 +16,7 @@ photo = PhotoImage(file="shel.png")
 Label(Tk, image=photo, height=50, width=50).place(x=20, y=10)
 DataList = []
 
-def IninTopText():
+def InitTopText():
     TempFont = font.Font(Tk, size=30, weight='bold', family='Malgun Gothic')
     MainText = Label(Tk, font=TempFont, text="지진 대피소 검색")
     MainText.pack()
@@ -50,6 +51,55 @@ def InitSearchButton():
     SearchButton.pack()
     SearchButton.place(x=365, y=110)
 
+def InitSearchMapButton():
+    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
+    SearchButton = Button(Tk, font=TempFont, text='위치보기', command=SearchMapButtonAction)
+    SearchButton.pack()
+    SearchButton.place(x=365, y=155)
+
+def SearchMapButtonAction():
+
+    global MAP, Mname
+    MAP = []
+    Mname = []
+    server = "api.data.go.kr"
+    conn = http.client.HTTPConnection(server)
+    hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
+    conn.request("GET","/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
+    req = conn.getresponse()
+    if int(req.status) == 200:
+        strXml = req.read()
+    else:
+        print("failed!")
+
+    tree = ElementTree.fromstring(strXml)
+    itemElements = tree.getiterator("item")  # item 엘리먼트 리스트 추출
+
+    for item in itemElements:
+        name = item.find("clnsShuntFcltyNm")  # clnsShuntFcltyNm 검색
+        longitude = item.find("latitude")  # latitude 검색
+        latitude = item.find("hardness")  # hardness 검색
+
+        if len(name.text) > 0:  # 검색된 결과가 있다면
+            Mname.append([name.text])  # 하나의 구호소 이름 리스트 Mname에 append
+
+        if len(latitude.text) > 0:  # 검색된 결과가 있다면
+            MAP.append([longitude.text, latitude.text])  # 하나의 구호소 이름과 주소를 튜플 타입으로 묶어 리스트 MAP에 append
+
+    for a in range(len(MAP)):
+        MAP[a] = [float(x) for x in MAP[a]]
+
+    Mname = sum(Mname, [])
+    map_osm = folium.Map(location=MAP[0], zoom_start=13)     # 위도 경도 지정
+
+    for a in range(len(MAP)):
+        folium.Marker(MAP[a], popup=Mname[a]).add_to(map_osm)     # 마커 지정
+
+    map_osm.save('now.html')     # html 파일로 저장
+
+    import os
+    os.popen(r"C:\Users\soyeon\Desktop\4-1\스크립트언어\scriptLan\\now.html")
+
 def SearchButtonAction():
     RenderText.configure(state='normal')
     RenderText.delete(0.0, END)
@@ -59,9 +109,68 @@ def SearchButtonAction():
 
 def InitSearchDangerPButton():
     TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='근처 지진 취약교량 검색', command=SearchDangerPButtonAction)
+    SearchButton = Button(Tk, font=TempFont, text='근처 지진 취약시설 검색', command=SearchDangerPButtonAction)
     SearchButton.pack()
     SearchButton.place(x=110, y=160)
+
+def InitSearchHowManyButton():
+    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
+    SearchButton = Button(Tk, font=TempFont, text='현재 지역 대피소 수용인원 비율 보기', command=SearchHowManyButtonAction)
+    SearchButton.pack()
+    SearchButton.place(x=600, y=450)
+
+def SearchHowManyButtonAction():
+    server = "api.data.go.kr"
+    conn = http.client.HTTPConnection(server)
+    hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
+    conn.request("GET","/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
+
+    req = conn.getresponse()
+    if int(req.status) == 200:
+        strXml = req.read()
+    else:
+        print("failed!")
+
+    howmany = []
+    tree = ElementTree.fromstring(strXml)
+    itemElements = tree.getiterator("item")  # item 엘리먼트 리스트 추출
+
+    for item in itemElements:
+        acceptNum = item.find("aceptncPosblCo")  # aceptncPosblCo 검색
+        if len(acceptNum.text) > 0:  # 검색된 결과가 있다면
+            howmany.append([acceptNum.text])  # 수용인원
+
+    for a in range(len(howmany)):
+        howmany[a] = [int(x) for x in howmany[a]]
+
+    howmany = sum(howmany, [])
+    Count = [0, 0, 0, 0, 0]
+
+    for a in range(len(howmany)):
+        if howmany[a] <= 500:
+            Count[0] += 1
+    for a in range(len(howmany)):
+        if (howmany[a] <= 1000 and howmany[a] > 500):
+            Count[1] += 1
+    for a in range(len(howmany)):
+        if (howmany[a] <= 5000 and howmany[a] > 1000):
+            Count[2] += 1
+    for a in range(len(howmany)):
+        if (howmany[a] <= 10000 and howmany[a] > 5000):
+            Count[3] += 1
+    for a in range(len(howmany)):
+        if (howmany[a] <= 20000 and howmany[a] > 10000):
+            Count[4] += 1
+
+    import matplotlib.pyplot as plt
+    from matplotlib import font_manager, rc
+    font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+    rc('font', family=font_name)
+
+    plt.suptitle('대피소 수용 인원', fontsize=16)
+    b = ["500명 이하", "1000명 이하", "5000명 이하", "10000명 이상", "20000명이상"]
+    plt.pie(Count, labels=b, shadow=True, autopct='%1.1f%%')
+    plt.show()
 
 def InitSearchDisasterMsgButton():
     TempFont = font.Font(Tk, size=11, weight='bold', family='Malgun Gothic')
@@ -70,13 +179,13 @@ def InitSearchDisasterMsgButton():
     SearchButton.place(x=300, y=200)
 
     global InputEmail
-    InputEmail = Entry(Tk, font=TempFont, width=20, borderwidth=7, relief='ridge')
+    InputEmail = Entry(Tk, font=TempFont, width=23, borderwidth=3, relief='ridge')
     InputEmail.pack()
-    InputEmail.place(x=80, y=200)
+    InputEmail.place(x=80, y=205)
 
     EmailLabel = Label(Tk, font=TempFont, text="이메일")
     EmailLabel.pack()
-    EmailLabel.place(x=20, y=205)
+    EmailLabel.place(x=20, y=208)
 
 
 
@@ -93,11 +202,11 @@ def SearchLibrary():
 
     global TEXT
     TEXT = []
+
     server = "api.data.go.kr"
     conn = http.client.HTTPConnection(server)
     hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
-    conn.request("GET",
-                 "/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
+    conn.request("GET","/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=" + hangul_utf8)
     # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
     req = conn.getresponse()
     print(req.status)
@@ -110,12 +219,12 @@ def SearchLibrary():
     itemElements = tree.getiterator("item")     # item 엘리먼트 리스트 추출
 
     for item in itemElements:
-        name = item.find("clnsShuntFcltyNm")    # clnsShuntFcltyNm 검색
-        adr = item.find("rdnmadr")              # rdnmadr 검색
-        if len(adr.text) > 0:                   # 검색된 결과가 있다면
+        name = item.find("clnsShuntFcltyNm")  # clnsShuntFcltyNm 검색
+        adr = item.find("rdnmadr")  # rdnmadr 검색
+        if len(adr.text) > 0:  # 검색된 결과가 있다면
             TEXT.append((name.text, adr.text))  # 하나의 구호소 이름과 주소를 튜플 타입으로 묶어 리스트 TEXT에 append
 
-    for i in range(len(TEXT)):                  #RenderText에 삽입
+    for i in range(len(TEXT)):  # RenderText에 삽입
         RenderText.insert(INSERT, "[")
         RenderText.insert(INSERT, i + 1)
         RenderText.insert(INSERT, "] ")
@@ -123,6 +232,10 @@ def SearchLibrary():
         RenderText.insert(INSERT, " | ")
         RenderText.insert(INSERT, TEXT[i][1])
         RenderText.insert(INSERT, "\n\n")
+
+
+
+
 
 
 
@@ -175,11 +288,13 @@ def InitRenderText():
     RenderTextScrollbar.pack(side=RIGHT, fill=BOTH)
     RenderText.configure(state='disabled')
 
-IninTopText()
+InitTopText()
 InitInputSi()
 InitInputGu()
 InitSearchButton()
+InitSearchMapButton()
 InitSearchDangerPButton()
 InitSearchDisasterMsgButton()
 InitRenderText()
+InitSearchHowManyButton()
 Tk.mainloop()
