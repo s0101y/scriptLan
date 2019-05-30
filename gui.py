@@ -7,55 +7,55 @@ import http.client
 import urllib
 from xml.etree import ElementTree
 import folium
-
+from tkinterhtml import *
 
 Tk = Tk()
 Tk.title("지진 대피소 검색")
-Tk.geometry('1000x500+750+200')
+Tk.geometry('800x500+750+200')
 photo = PhotoImage(file="shel.png")
-Label(Tk, image=photo, height=50, width=50).place(x=20, y=10)
+Label(Tk, image=photo, height=50, width=50).place(x=20, y=30)
 DataList = []
 
 def InitTopText():
     TempFont = font.Font(Tk, size=30, weight='bold', family='Malgun Gothic')
     MainText = Label(Tk, font=TempFont, text="지진 대피소 검색")
     MainText.pack()
-    MainText.place(x=80)
+    MainText.place(x=100, y=25)
 
 def InitInputSi():
     global Combobox1
     TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
-    SiLabel = Label(Tk, font=TempFont, text="시 / 도")
+    SiLabel = Label(Tk, font=TempFont, text="시 / 도 :")
     SiLabel.pack()
-    SiLabel.place(x=85, y=70)
+    SiLabel.place(x=80, y=120)
     Combobox1 = ttk.Combobox(font=TempFont, textvariable=str, width=10)
     Combobox1['value'] = ("서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원도", "충청북도", "충청남도",
                           "전라북도", "전라남도", "경상북도", "경상남도", "제주특별자치도")    #종류
     Combobox1.current(0)    #시작지점
     Combobox1.pack()
-    Combobox1.place(x=55, y=110)
+    Combobox1.place(x=180, y=120)
 
 def InitInputGu():
     global InputLabel
     TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
-    GuLabel = Label(Tk, font=TempFont, text="구")
+    GuLabel = Label(Tk, font=TempFont, text="구 :")
     GuLabel.pack()
-    GuLabel.place(x=265, y=70)
-    InputLabel = Entry(Tk, font=TempFont, width=10, borderwidth=5, relief='ridge')
+    GuLabel.place(x=350, y=120)
+    InputLabel = Entry(Tk, font=TempFont, width=15, borderwidth=5, relief='ridge')
     InputLabel.pack()
-    InputLabel.place(x=215, y=110)
+    InputLabel.place(x=400, y=120)
 
 def InitSearchButton():
-    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
+    TempFont = font.Font(Tk, size=20, weight='bold', family='Malgun Gothic')
     SearchButton = Button(Tk, font=TempFont, text='검 색', command=SearchButtonAction)
     SearchButton.pack()
-    SearchButton.place(x=365, y=110)
+    SearchButton.place(x=600, y=100)
 
 def InitSearchMapButton():
-    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='위치보기', command=SearchMapButtonAction)
+    TempFont = font.Font(Tk, size=15, weight='bold', family='Malgun Gothic')
+    SearchButton = Button(Tk, font=TempFont, text='현재 지역 대피소 위치 보기', bg='green', command=SearchMapButtonAction)
     SearchButton.pack()
-    SearchButton.place(x=365, y=155)
+    SearchButton.place(x=500, y=250)
 
 def SearchMapButtonAction():
 
@@ -108,16 +108,16 @@ def SearchButtonAction():
 
 
 def InitSearchDangerPButton():
-    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='근처 지진 취약시설 검색', command=SearchDangerPButtonAction)
+    TempFont = font.Font(Tk, size=15, weight='bold', family='Malgun Gothic')
+    SearchButton = Button(Tk, font=TempFont, text='근처 지진 취약시설 검색', bg='red',command=SearchDangerPButtonAction)
     SearchButton.pack()
-    SearchButton.place(x=110, y=160)
+    SearchButton.place(x=515, y=330)
 
 def InitSearchHowManyButton():
-    TempFont = font.Font(Tk, size=12, weight='bold', family='Malgun Gothic')
-    SearchButton = Button(Tk, font=TempFont, text='현재 지역 대피소 수용인원 비율 보기', command=SearchHowManyButtonAction)
+    TempFont = font.Font(Tk, size=15, weight='bold', family='Malgun Gothic')
+    SearchButton = Button(Tk, font=TempFont, text='현재 지역 대피소\n 수용인원 비율 보기', bg='blue',command=SearchHowManyButtonAction)
     SearchButton.pack()
-    SearchButton.place(x=600, y=450)
+    SearchButton.place(x=535, y=400)
 
 def SearchHowManyButtonAction():
     server = "api.data.go.kr"
@@ -176,16 +176,16 @@ def InitSearchDisasterMsgButton():
     TempFont = font.Font(Tk, size=11, weight='bold', family='Malgun Gothic')
     SearchButton = Button(Tk, font=TempFont, text='재난알림 보내기', command=MailSubmit)
     SearchButton.pack()
-    SearchButton.place(x=300, y=200)
+    SearchButton.place(x=610, y=185)
 
     global InputEmail
-    InputEmail = Entry(Tk, font=TempFont, width=23, borderwidth=3, relief='ridge')
+    InputEmail = Entry(Tk, font=TempFont, width=50, borderwidth=3, relief='ridge')
     InputEmail.pack()
-    InputEmail.place(x=80, y=205)
+    InputEmail.place(x=140, y=190)
 
-    EmailLabel = Label(Tk, font=TempFont, text="이메일")
+    EmailLabel = Label(Tk, font=TempFont, text="이메일주소 입력:")
     EmailLabel.pack()
-    EmailLabel.place(x=20, y=208)
+    EmailLabel.place(x=20, y=190)
 
 
 
