@@ -7,7 +7,8 @@ import http.client
 import urllib
 from xml.etree import ElementTree
 import folium
-from tkinterhtml import *
+import spam
+
 
 Tk = Tk()
 Tk.title("지진 대피소 검색")
@@ -90,7 +91,7 @@ def SearchMapButtonAction():
         MAP[a] = [float(x) for x in MAP[a]]
 
     Mname = sum(Mname, [])
-    map_osm = folium.Map(location=MAP[0], zoom_start=13)     # 위도 경도 지정
+    map_osm = folium.Map(location=MAP[10], zoom_start=15)     # 위도 경도 지정
 
     for a in range(len(MAP)):
         folium.Marker(MAP[a], popup=Mname[a]).add_to(map_osm)     # 마커 지정
@@ -101,11 +102,16 @@ def SearchMapButtonAction():
     os.popen(r"C:\Users\soyeon\Desktop\4-1\스크립트언어\scriptLan\\now.html")
 
 def SearchButtonAction():
+
+    TempFont = font.Font(Tk, size=15, family='Malgun Gothic')
     RenderText.configure(state='normal')
     RenderText.delete(0.0, END)
-    SearchLibrary()
+    if spam.strlen(InputLabel.get()) <= 0:
+        Label(Tk, font=TempFont, text="구를 입력해주세요.", fg='red').place(x=400, y=80)
+    else:
+        Label(Tk, font=TempFont, text="                          ", fg='red').place(x=400, y=80)
+        SearchLibrary()
     RenderText.configure(state='disabled')
-
 
 def InitSearchDangerPButton():
     TempFont = font.Font(Tk, size=15, weight='bold', family='Malgun Gothic')
@@ -167,9 +173,11 @@ def SearchHowManyButtonAction():
     font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
     rc('font', family=font_name)
 
-    plt.suptitle('대피소 수용 인원', fontsize=16)
-    b = ["500명 이하", "1000명 이하", "5000명 이하", "10000명 이상", "20000명이상"]
+    plt.title('대피소 수용 인원 비율', fontsize=16)
+
+    b = ["500명 이하 수용가능", "1000명 이하 수용가능", "5000명 이하 수용가능", "10000명 이하 수용가능", "20000명 이상 수용가능"]
     plt.pie(Count, labels=b, shadow=True, autopct='%1.1f%%')
+
     plt.show()
 
 def InitSearchDisasterMsgButton():
