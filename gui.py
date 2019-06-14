@@ -9,6 +9,10 @@ from xml.etree import ElementTree
 import folium
 import spam
 import webbrowser
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
 
 Tk = Tk()
 Tk.title("지진 대피소 검색")
@@ -168,17 +172,21 @@ def SearchHowManyButtonAction():
         if (howmany[a] <= 20000 and howmany[a] > 10000):
             Count[4] += 1
 
-    import matplotlib.pyplot as plt
-    from matplotlib import font_manager, rc
+    window1 = Toplevel(Tk)
+    window1.title("대피소 수용 인원 비율 현황")
+
     font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
     rc('font', family=font_name)
 
+    fig1 = plt.figure(2)
     plt.title('대피소 수용 인원 비율', fontsize=16)
-
     b = ["500명 이하 수용가능", "1000명 이하 수용가능", "5000명 이하 수용가능", "10000명 이하 수용가능", "20000명 이상 수용가능"]
     plt.pie(Count, labels=b, shadow=True, autopct='%1.1f%%')
 
-    plt.show()
+    canvas = FigureCanvasTkAgg(fig1, master=window1)
+    plot_widget = canvas.get_tk_widget()
+
+    plot_widget.grid(row=0, column=0)
 
 def InitSearchDisasterMsgButton():
     TempFont = font.Font(Tk, size=11, weight='bold', family='Malgun Gothic')
@@ -278,7 +286,66 @@ def MailSubmit():
 def SearchDangerPButtonAction():
     window = Toplevel(Tk)
     window.title("근처 지진 취약 시설")
-    window.geometry('500x500+750+200')
+
+    server = "apis.data.go.kr"
+    conn = http.client.HTTPConnection(server)
+    hangul_utf8 = urllib.parse.quote(Combobox1.get() + " " + InputLabel.get())
+    conn.request("GET",
+                 "/B552016/OldFacilService/getFacil30YearsOldList?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&numOfRows=20&pageNo=1&type=xml&facilAddr=" + hangul_utf8)
+    # http://api.data.go.kr/openapi/clns-shunt-fclty-std?serviceKey=pRhsehsqTxKvRoWsJyn%2FALMmqPMUBhRax3KRNAG%2BUQVKM5NBbWpWapjs1BVntARUSUhLvdXkCHzeiXjOh0HmCQ%3D%3D&pageNo=1&numOfRows=100&type=xml&insttNm=%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EB%B6%81%EA%B5%AC
+    req = conn.getresponse()
+    print(req.status)
+    if int(req.status) == 200:
+        strXml = req.read()
+    else:
+        print("failed!")
+
+    Grade = []
+    Mname = []
+    tree = ElementTree.fromstring(strXml)
+    itemElements = tree.getiterator("item")  # item 엘리먼트 리스트 추출
+
+    for item in itemElements:
+        name = item.find("facilNm")  # clnsShuntFcltyNm 검색
+        grade = item.find("sfGrade")
+
+        if len(name.text) > 0:  # 검색된 결과가 있다면
+            Mname.append(name.text)  # 하나의 구호소 이름
+            Grade.append(grade.text)  # 하나의 구호소 이름과 주소를 튜플 타입으로 묶어 리스트 TEXT에 append
+
+    # Dmap.save('dangerMap.html')  # html 파일로 저장
+    # webbrowser.open('dangerMap.html')
+    GradeN = ['A등급', 'B등급', 'C등급', 'D등급']
+    gCount = [0, 0, 0, 0]
+
+    for a in range(len(Grade)):
+        if Grade[a] == 'A등급':
+            gCount[0] += 1
+    for a in range(len(Grade)):
+        if Grade[a] == 'B등급':
+            gCount[1] += 1
+    for a in range(len(Grade)):
+        if Grade[a] == 'C등급':
+            gCount[2] += 1
+    for a in range(len(Grade)):
+        if Grade[a] == 'D등급':
+            gCount[3] += 1
+
+    from matplotlib import font_manager, rc
+    font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+    rc('font', family=font_name)
+
+    fig = plt.figure(1)
+    xs = [i for i, _ in enumerate(GradeN)]
+    plt.bar(xs, gCount)
+    plt.ylabel("건물 개수")
+    plt.title("노후건물 안전등급 현황")
+    plt.xticks([i for i, _ in enumerate(GradeN)], GradeN)
+
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    plot_widget = canvas.get_tk_widget()
+    plot_widget.grid(row=0, column=0)
+
 
 
 def InitRenderText():
