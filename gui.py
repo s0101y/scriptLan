@@ -203,8 +203,6 @@ def InitSearchDisasterMsgButton():
     EmailLabel.pack()
     EmailLabel.place(x=20, y=190)
 
-
-
     Label1 = Label(Tk, font=TempFont, text="시설명")
     Label1.pack()
     Label1.place(x=60, y=235)
@@ -299,22 +297,50 @@ def SearchDangerPButtonAction():
         strXml = req.read()
     else:
         print("failed!")
-
+    MAP = []
+    MAP1 = []
+    Mname =[]
     Grade = []
-    Mname = []
     tree = ElementTree.fromstring(strXml)
     itemElements = tree.getiterator("item")  # item 엘리먼트 리스트 추출
 
     for item in itemElements:
         name = item.find("facilNm")  # clnsShuntFcltyNm 검색
         grade = item.find("sfGrade")
+        longitude = item.find("gisY")
+        latitude = item.find("gisX")
 
         if len(name.text) > 0:  # 검색된 결과가 있다면
             Mname.append(name.text)  # 하나의 구호소 이름
             Grade.append(grade.text)  # 하나의 구호소 이름과 주소를 튜플 타입으로 묶어 리스트 TEXT에 append
+            MAP.append(longitude.text)
+            MAP1.append(latitude.text)
 
-    # Dmap.save('dangerMap.html')  # html 파일로 저장
-    # webbrowser.open('dangerMap.html')
+    z = []
+    z1 = []
+    for e in MAP:
+        if e is not None and len(e) > 0:
+            z.append(e)
+    MAP = z
+    for e in MAP1:
+        if e is not None and len(e) > 0:
+            z1.append(e)
+    MAP1 = z1
+
+    for a in range(len(MAP)):
+        MAP = [float(x) for x in MAP]
+        MAP1 = [float(x) for x in MAP1]
+    fin = []
+    for a in range(len(MAP)):
+        fin.append([MAP[a], MAP1[a]])
+    Dmap = folium.Map(location=fin[2], zoom_start=16)  # 위도 경도 지정
+
+    for a in range(len(MAP)):
+        folium.CircleMarker(fin[a], radius=50, color='#ff0000', fill_color='#ff0000').add_to(Dmap)  # 마커 지정
+
+    Dmap.save('dangerMap.html')  # html 파일로 저장
+    webbrowser.open('dangerMap.html')
+
     GradeN = ['A등급', 'B등급', 'C등급', 'D등급']
     gCount = [0, 0, 0, 0]
 
@@ -360,6 +386,7 @@ def InitRenderText():
     RenderTextScrollbar.config(command=RenderText.yview)
     RenderTextScrollbar.pack(side=RIGHT, fill=BOTH)
     RenderText.configure(state='disabled')
+
 
 InitTopText()
 InitInputSi()
