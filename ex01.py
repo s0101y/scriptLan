@@ -16,7 +16,8 @@ if int(req.status) == 200:
     strXml = req.read()
 else:
     print("failed!")
-
+MAP = []
+MAP1 = []
 Grade = []
 Mname = []
 tree = ElementTree.fromstring(strXml)
@@ -25,16 +26,45 @@ itemElements = tree.getiterator("item")    # item 엘리먼트 리스트 추출
 for item in itemElements:
     name = item.find("facilNm")  # clnsShuntFcltyNm 검색
     grade = item.find("sfGrade")
+    latitude = item.find("gisX")
+    longitude = item.find("gisY")
+
 
     if len(name.text) > 0:      # 검색된 결과가 있다면
         Mname.append(name.text)  # 하나의 구호소 이름
         Grade.append(grade.text)  # 하나의 구호소 이름과 주소를 튜플 타입으로 묶어 리스트 TEXT에 append
+        MAP.append(longitude.text)
+        MAP1.append(latitude.text)
 
 gCount = [0,0,0,0]
+z=[]
+z1=[]
+for e in MAP:
+    if e is not None and len(e) > 0:
+        z.append(e)
+MAP = z
+for e in MAP1:
+    if e is not None and len(e) > 0:
+        z1.append(e)
+MAP1 = z1
+
+print(MAP)
+print(MAP1)
+
+for a in range(len(MAP)):
+        MAP = [float(x) for x in MAP]
+        MAP1 = [float(x) for x in MAP1]
+
+fin = []
+
+for a in range(len(MAP)):
+    fin.append([MAP[a], MAP1[a]])
 
 print(Mname)
 print(Grade)
-
+print(MAP)
+print(MAP1)
+print(fin)
 #Dmap.save('dangerMap.html')  # html 파일로 저장
 #webbrowser.open('dangerMap.html')
 
